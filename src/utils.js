@@ -456,16 +456,25 @@ class Utils {
     if (!groups) {
       return false;
     }
-
-    var scope = JSON.parse(JSON.stringify(groups));
-    var expressionFn = this.makePredicateFunction(expression);
-
+    var groupsArr = [];
+    if (!Array.isArray(groups) && typeof groups.items !== 'undefined') {
+      groupsArr = groups.items.map((group) => group.name);
+    }
+    else {
+      groupsArr = Object.keys(group);
+    }
+    const scope = {};
+    let expressionFn;
+    try {
+      expressionFn = this.makePredicateFunction(expression);
+    } 
+    catch(err) {
+      this.logWarning('GroupExpression', `Invalid boolean group expression: "${expression}"`);
+      return false;
+    }
     expression.match(/(\w+)/gmi).forEach((wordMatch) => {
-      if (!(wordMatch in scope)) {
-        scope[wordMatch] = false;
-      }
+      scope[wordMatch] = groupsArr.indexOf(wordMatch) > -1;
     });
-
     return expressionFn(scope);
   }
 
